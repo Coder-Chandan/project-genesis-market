@@ -85,7 +85,11 @@ const Navbar = () => {
                 ) : isAuthenticated ? (
                   <>
                     <DropdownMenuItem className="font-medium">
-                      {user?.user_metadata?.name || user?.email}
+                      Account
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>
+                      <Link to="/profile" className="w-full">Profile</Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout}>
@@ -133,10 +137,15 @@ const Navbar = () => {
               {isLoading ? (
                 <div className="text-foreground">Loading...</div>
               ) : isAuthenticated ? (
-                <Button variant="ghost" onClick={handleLogout} className="text-foreground">
-                  <LogOut className="h-5 w-5 mr-2" />
-                  Logout
-                </Button>
+                <>
+                  <Link to="/profile" className="text-foreground" onClick={() => setIsMenuOpen(false)}>
+                    Account
+                  </Link>
+                  <Button variant="ghost" onClick={handleLogout} className="text-foreground">
+                    <LogOut className="h-5 w-5 mr-2" />
+                    Logout
+                  </Button>
+                </>
               ) : (
                 <>
                   <Link to="/login" className="text-foreground" onClick={() => setIsMenuOpen(false)}>
