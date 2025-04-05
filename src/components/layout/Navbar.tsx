@@ -1,21 +1,32 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Menu, X, ShoppingCart, Search, User } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Menu, X, ShoppingCart, Search, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
 import ThemeToggle from '@/components/ui/ThemeToggle';
+import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleLogout = () => {
+    logout();
+    toast.success("Logged out successfully");
+    navigate('/');
   };
 
   const navLinks = [
@@ -69,12 +80,27 @@ const Navbar = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>
-                  <Link to="/login" className="w-full">Login</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Link to="/register" className="w-full">Register</Link>
-                </DropdownMenuItem>
+                {isAuthenticated ? (
+                  <>
+                    <DropdownMenuItem className="font-medium">
+                      {user?.name || user?.email}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout}>
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Logout
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  <>
+                    <DropdownMenuItem>
+                      <Link to="/login" className="w-full">Login</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Link to="/register" className="w-full">Register</Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -102,12 +128,21 @@ const Navbar = () => {
               </Link>
             ))}
             <div className="flex justify-around pt-4 border-t border-border">
-              <Link to="/login" className="text-foreground">
-                Login
-              </Link>
-              <Link to="/register" className="text-foreground">
-                Register
-              </Link>
+              {isAuthenticated ? (
+                <Button variant="ghost" onClick={handleLogout} className="text-foreground">
+                  <LogOut className="h-5 w-5 mr-2" />
+                  Logout
+                </Button>
+              ) : (
+                <>
+                  <Link to="/login" className="text-foreground" onClick={() => setIsMenuOpen(false)}>
+                    Login
+                  </Link>
+                  <Link to="/register" className="text-foreground" onClick={() => setIsMenuOpen(false)}>
+                    Register
+                  </Link>
+                </>
+              )}
               <Link to="/cart" className="text-foreground">
                 <ShoppingCart className="h-5 w-5" />
               </Link>
