@@ -9,6 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+import ThemeToggle from '@/components/ui/ThemeToggle';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -26,7 +27,7 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="bg-white shadow-sm sticky top-0 z-50">
+    <nav className="bg-background border-b border-border sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3">
         <div className="flex justify-between items-center">
           {/* Logo */}
@@ -42,7 +43,7 @@ const Navbar = () => {
               <Link 
                 key={link.name} 
                 to={link.path} 
-                className="text-gray-700 hover:text-accent1-600 font-medium"
+                className="text-foreground hover:text-accent font-medium"
               >
                 {link.name}
               </Link>
@@ -58,6 +59,8 @@ const Navbar = () => {
             <Button variant="ghost" size="icon">
               <ShoppingCart className="h-5 w-5" />
             </Button>
+            
+            <ThemeToggle />
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -77,7 +80,8 @@ const Navbar = () => {
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden">
+          <div className="md:hidden flex items-center gap-2">
+            <ThemeToggle />
             <Button variant="ghost" size="icon" onClick={toggleMenu}>
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
@@ -91,20 +95,20 @@ const Navbar = () => {
               <Link 
                 key={link.name} 
                 to={link.path} 
-                className="block py-2 px-4 text-gray-700 hover:bg-gray-100 rounded"
+                className="block py-2 px-4 text-foreground hover:bg-muted rounded"
                 onClick={() => setIsMenuOpen(false)}
               >
                 {link.name}
               </Link>
             ))}
-            <div className="flex justify-around pt-4 border-t">
-              <Link to="/login" className="text-gray-700">
+            <div className="flex justify-around pt-4 border-t border-border">
+              <Link to="/login" className="text-foreground">
                 Login
               </Link>
-              <Link to="/register" className="text-gray-700">
+              <Link to="/register" className="text-foreground">
                 Register
               </Link>
-              <Link to="/cart" className="text-gray-700">
+              <Link to="/cart" className="text-foreground">
                 <ShoppingCart className="h-5 w-5" />
               </Link>
             </div>
