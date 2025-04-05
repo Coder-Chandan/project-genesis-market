@@ -17,6 +17,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import MainLayout from '@/components/layout/MainLayout';
+import { useAuth } from '@/context/AuthContext';
+import { useEffect } from 'react';
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email" }),
@@ -27,6 +29,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login, isAuthenticated, isLoading } = useAuth();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -36,31 +39,40 @@ const Login = () => {
     },
   });
 
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && !isLoading) {
+      navigate('/');
+    }
+  }, [isAuthenticated, isLoading, navigate]);
+
   const isSubmitting = form.formState.isSubmitting;
 
   const onSubmit = async (data: LoginFormValues) => {
     try {
-      // This is a mock authentication - in a real app, you would connect to a backend
-      console.log("Login attempt with:", data);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // For demo purposes: check if email contains "error" to simulate a failed login
-      if (data.email.includes("error")) {
-        toast.error("Invalid email or password");
-        return;
+      const { error } = await login(data.email, data.password);
+      if (!error) {
+        navigate('/');
       }
-
-      // Simulate successful login
-      localStorage.setItem("user", JSON.stringify({ email: data.email }));
-      toast.success("Login successful");
-      navigate("/");
     } catch (error) {
-      toast.error("An error occurred during login");
       console.error(error);
+      toast.error("An unexpected error occurred");
     }
   };
+
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="container flex items-center justify-center min-h-[60vh]">
+          <p>Loading...</p>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (isAuthenticated) {
+    return null; // Will be redirected by useEffect
+  }
 
   return (
     <MainLayout>

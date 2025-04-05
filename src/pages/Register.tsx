@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -17,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import MainLayout from '@/components/layout/MainLayout';
+import { useAuth } from '@/context/AuthContext';
 
 const registerSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
@@ -32,6 +33,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 const Register = () => {
   const navigate = useNavigate();
+  const { register, isAuthenticated, isLoading } = useAuth();
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -43,31 +45,41 @@ const Register = () => {
     },
   });
 
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && !isLoading) {
+      navigate('/');
+    }
+  }, [isAuthenticated, isLoading, navigate]);
+
   const isSubmitting = form.formState.isSubmitting;
 
   const onSubmit = async (data: RegisterFormValues) => {
     try {
-      // This is a mock registration - in a real app, you would connect to a backend
-      console.log("Registration attempt with:", data);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // For demo purposes: check if email contains "taken" to simulate an already registered email
-      if (data.email.includes("taken")) {
-        toast.error("Email is already registered");
-        return;
+      const { error } = await register(data.email, data.password, data.name);
+      if (!error) {
+        // In a real app with email verification, you might redirect to a verification page instead
+        navigate('/');
       }
-
-      // Simulate successful registration
-      localStorage.setItem("user", JSON.stringify({ name: data.name, email: data.email }));
-      toast.success("Registration successful");
-      navigate("/");
     } catch (error) {
-      toast.error("An error occurred during registration");
       console.error(error);
+      toast.error("An unexpected error occurred");
     }
   };
+
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="container flex items-center justify-center min-h-[60vh]">
+          <p>Loading...</p>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (isAuthenticated) {
+    return null; // Will be redirected by useEffect
+  }
 
   return (
     <MainLayout>

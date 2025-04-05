@@ -12,20 +12,18 @@ import {
 } from '@/components/ui/dropdown-menu';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import { useAuth } from '@/context/AuthContext';
-import { toast } from 'sonner';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, isLoading } = useAuth();
   const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const handleLogout = () => {
-    logout();
-    toast.success("Logged out successfully");
+  const handleLogout = async () => {
+    await logout();
     navigate('/');
   };
 
@@ -80,10 +78,14 @@ const Navbar = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                {isAuthenticated ? (
+                {isLoading ? (
+                  <DropdownMenuItem disabled>
+                    Loading...
+                  </DropdownMenuItem>
+                ) : isAuthenticated ? (
                   <>
                     <DropdownMenuItem className="font-medium">
-                      {user?.name || user?.email}
+                      {user?.user_metadata?.name || user?.email}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout}>
@@ -128,7 +130,9 @@ const Navbar = () => {
               </Link>
             ))}
             <div className="flex justify-around pt-4 border-t border-border">
-              {isAuthenticated ? (
+              {isLoading ? (
+                <div className="text-foreground">Loading...</div>
+              ) : isAuthenticated ? (
                 <Button variant="ghost" onClick={handleLogout} className="text-foreground">
                   <LogOut className="h-5 w-5 mr-2" />
                   Logout
