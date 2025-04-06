@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Star, StarHalf } from "lucide-react";
+import { Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import MainLayout from "@/components/layout/MainLayout";
 
 interface PurchasedProject {
   id: string;
@@ -37,8 +38,35 @@ const Profile = () => {
   useEffect(() => {
     if (user) {
       fetchPurchasedProjects();
+      fetchUserProfile();
     }
   }, [user]);
+
+  const fetchUserProfile = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setProfileData({
+          name: data.name || user.user_metadata?.name || "",
+          bio: data.bio || "",
+          github: data.github || "",
+          linkedin: data.linkedin || "",
+          website: data.website || "",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+    }
+  };
 
   const fetchPurchasedProjects = async () => {
     try {
@@ -77,8 +105,26 @@ const Profile = () => {
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // First update Supabase profile table if it exists
+      if (user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({ 
+            id: user.id,
+            name: profileData.name,
+            bio: profileData.bio,
+            github: profileData.github,
+            linkedin: profileData.linkedin,
+            website: profileData.website,
+            updated_at: new Date()
+          });
+
+        if (profileError) throw profileError;
+      }
+
+      // Then update auth metadata
       const { error } = await supabase.auth.updateUser({
-        data: profileData,
+        data: { name: profileData.name },
       });
 
       if (error) throw error;
@@ -122,269 +168,273 @@ const Profile = () => {
 
   if (!user) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-center">Please log in to view your profile.</p>
-            <div className="flex justify-center mt-4">
-              <Button onClick={() => navigate("/login")}>Go to Login</Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <MainLayout>
+        <div className="container mx-auto px-4 py-8">
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-center">Please log in to view your profile.</p>
+              <div className="flex justify-center mt-4">
+                <Button onClick={() => navigate("/login")}>Go to Login</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </MainLayout>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold">My Profile</h1>
-          <Button variant="outline" onClick={handleLogout}>
-            Logout
-          </Button>
+    <MainLayout>
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-4xl font-bold">My Profile</h1>
+            <Button variant="outline" onClick={handleLogout}>
+              Logout
+            </Button>
+          </div>
+
+          <Tabs defaultValue="overview" className="space-y-6">
+            <TabsList>
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="purchases">My Purchases</TabsTrigger>
+              <TabsTrigger value="settings">Settings</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="overview" className="space-y-6">
+              <div className="grid md:grid-cols-3 gap-8">
+                <div className="md:col-span-1">
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="text-center">
+                        <div className="w-32 h-32 mx-auto bg-gray-200 rounded-full mb-4 flex items-center justify-center">
+                          <span className="text-4xl text-gray-500">
+                            {profileData.name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase()}
+                          </span>
+                        </div>
+                        <h2 className="text-xl font-semibold">{profileData.name || "User"}</h2>
+                        <p className="text-gray-600 dark:text-gray-300">{user.email}</p>
+                        <div className="mt-4">
+                          <Badge variant="secondary">
+                            {purchasedProjects.length} Purchases
+                          </Badge>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="mt-6">
+                    <CardHeader>
+                      <CardTitle>Quick Stats</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-sm text-gray-500">Total Purchases</p>
+                          <p className="text-2xl font-bold">{purchasedProjects.length}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">Average Rating Given</p>
+                          <p className="text-2xl font-bold">
+                            {purchasedProjects.filter(p => p.rating).length > 0
+                              ? (purchasedProjects.reduce((acc, p) => acc + (p.rating || 0), 0) /
+                                  purchasedProjects.filter(p => p.rating).length).toFixed(1)
+                              : "N/A"}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="md:col-span-2">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>About Me</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-gray-600 dark:text-gray-300">
+                        {profileData.bio || "No bio provided yet."}
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="mt-6">
+                    <CardHeader>
+                      <CardTitle>Social Links</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {profileData.github && (
+                          <div className="flex items-center space-x-2">
+                            <span className="font-medium">GitHub:</span>
+                            <a href={profileData.github} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                              {profileData.github}
+                            </a>
+                          </div>
+                        )}
+                        {profileData.linkedin && (
+                          <div className="flex items-center space-x-2">
+                            <span className="font-medium">LinkedIn:</span>
+                            <a href={profileData.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                              {profileData.linkedin}
+                            </a>
+                          </div>
+                        )}
+                        {profileData.website && (
+                          <div className="flex items-center space-x-2">
+                            <span className="font-medium">Website:</span>
+                            <a href={profileData.website} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                              {profileData.website}
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="purchases" className="space-y-6">
+              <h2 className="text-2xl font-bold mb-4">My Purchased Projects</h2>
+              <div className="grid gap-6">
+                {purchasedProjects.map((project) => (
+                  <Card key={project.id}>
+                    <CardContent className="pt-6">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="text-xl font-semibold">{project.title}</h3>
+                          <p className="text-gray-600 dark:text-gray-300 mt-2">
+                            {project.description}
+                          </p>
+                          <p className="text-sm text-gray-500 mt-2">
+                            Purchased on: {new Date(project.purchase_date).toLocaleDateString()}
+                          </p>
+                        </div>
+                        {project.rating ? (
+                          <div className="flex items-center space-x-1">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-5 h-5 ${
+                                  i < Math.floor(project.rating!)
+                                    ? "fill-yellow-400 text-yellow-400"
+                                    : i < project.rating!
+                                    ? "fill-yellow-400 text-yellow-400"
+                                    : "text-gray-300"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              // This would typically open a modal or form
+                              handleRateProject(project.id, 5, "Great project!");
+                            }}
+                          >
+                            Rate Project
+                          </Button>
+                        )}
+                      </div>
+                      {project.review && (
+                        <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <p className="text-gray-600 dark:text-gray-300">{project.review}</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="settings" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Profile Settings</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleUpdateProfile} className="space-y-4">
+                    <div>
+                      <label htmlFor="name" className="block text-sm font-medium mb-1">
+                        Name
+                      </label>
+                      <Input
+                        id="name"
+                        value={profileData.name}
+                        onChange={(e) =>
+                          setProfileData((prev) => ({ ...prev, name: e.target.value }))
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="bio" className="block text-sm font-medium mb-1">
+                        Bio
+                      </label>
+                      <Textarea
+                        id="bio"
+                        value={profileData.bio}
+                        onChange={(e) =>
+                          setProfileData((prev) => ({ ...prev, bio: e.target.value }))
+                        }
+                        className="min-h-[100px]"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="github" className="block text-sm font-medium mb-1">
+                        GitHub Profile
+                      </label>
+                      <Input
+                        id="github"
+                        value={profileData.github}
+                        onChange={(e) =>
+                          setProfileData((prev) => ({ ...prev, github: e.target.value }))
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="linkedin" className="block text-sm font-medium mb-1">
+                        LinkedIn Profile
+                      </label>
+                      <Input
+                        id="linkedin"
+                        value={profileData.linkedin}
+                        onChange={(e) =>
+                          setProfileData((prev) => ({ ...prev, linkedin: e.target.value }))
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="website" className="block text-sm font-medium mb-1">
+                        Website
+                      </label>
+                      <Input
+                        id="website"
+                        value={profileData.website}
+                        onChange={(e) =>
+                          setProfileData((prev) => ({ ...prev, website: e.target.value }))
+                        }
+                      />
+                    </div>
+
+                    <Button type="submit" className="w-full">
+                      Save Changes
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
-
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="purchases">My Purchases</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="md:col-span-1">
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-center">
-                      <div className="w-32 h-32 mx-auto bg-gray-200 rounded-full mb-4 flex items-center justify-center">
-                        <span className="text-4xl text-gray-500">
-                          {profileData.name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase()}
-                        </span>
-                      </div>
-                      <h2 className="text-xl font-semibold">{profileData.name || "User"}</h2>
-                      <p className="text-gray-600 dark:text-gray-300">{user.email}</p>
-                      <div className="mt-4">
-                        <Badge variant="secondary">
-                          {purchasedProjects.length} Purchases
-                        </Badge>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="mt-6">
-                  <CardHeader>
-                    <CardTitle>Quick Stats</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div>
-                        <p className="text-sm text-gray-500">Total Purchases</p>
-                        <p className="text-2xl font-bold">{purchasedProjects.length}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Average Rating Given</p>
-                        <p className="text-2xl font-bold">
-                          {purchasedProjects.filter(p => p.rating).length > 0
-                            ? (purchasedProjects.reduce((acc, p) => acc + (p.rating || 0), 0) /
-                                purchasedProjects.filter(p => p.rating).length).toFixed(1)
-                            : "N/A"}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <div className="md:col-span-2">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>About Me</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-600 dark:text-gray-300">
-                      {profileData.bio || "No bio provided yet."}
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card className="mt-6">
-                  <CardHeader>
-                    <CardTitle>Social Links</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {profileData.github && (
-                        <div className="flex items-center space-x-2">
-                          <span className="font-medium">GitHub:</span>
-                          <a href={profileData.github} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-                            {profileData.github}
-                          </a>
-                        </div>
-                      )}
-                      {profileData.linkedin && (
-                        <div className="flex items-center space-x-2">
-                          <span className="font-medium">LinkedIn:</span>
-                          <a href={profileData.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-                            {profileData.linkedin}
-                          </a>
-                        </div>
-                      )}
-                      {profileData.website && (
-                        <div className="flex items-center space-x-2">
-                          <span className="font-medium">Website:</span>
-                          <a href={profileData.website} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-                            {profileData.website}
-                          </a>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="purchases" className="space-y-6">
-            <h2 className="text-2xl font-bold mb-4">My Purchased Projects</h2>
-            <div className="grid gap-6">
-              {purchasedProjects.map((project) => (
-                <Card key={project.id}>
-                  <CardContent className="pt-6">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="text-xl font-semibold">{project.title}</h3>
-                        <p className="text-gray-600 dark:text-gray-300 mt-2">
-                          {project.description}
-                        </p>
-                        <p className="text-sm text-gray-500 mt-2">
-                          Purchased on: {new Date(project.purchase_date).toLocaleDateString()}
-                        </p>
-                      </div>
-                      {project.rating ? (
-                        <div className="flex items-center space-x-1">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-5 h-5 ${
-                                i < Math.floor(project.rating!)
-                                  ? "fill-yellow-400 text-yellow-400"
-                                  : i < project.rating!
-                                  ? "fill-yellow-400 text-yellow-400"
-                                  : "text-gray-300"
-                              }`}
-                            />
-                          ))}
-                        </div>
-                      ) : (
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            // This would typically open a modal or form
-                            handleRateProject(project.id, 5, "Great project!");
-                          }}
-                        >
-                          Rate Project
-                        </Button>
-                      )}
-                    </div>
-                    {project.review && (
-                      <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                        <p className="text-gray-600 dark:text-gray-300">{project.review}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="settings" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Profile Settings</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleUpdateProfile} className="space-y-4">
-                  <div>
-                    <label htmlFor="name" className="block text-sm font-medium mb-1">
-                      Name
-                    </label>
-                    <Input
-                      id="name"
-                      value={profileData.name}
-                      onChange={(e) =>
-                        setProfileData((prev) => ({ ...prev, name: e.target.value }))
-                      }
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="bio" className="block text-sm font-medium mb-1">
-                      Bio
-                    </label>
-                    <Textarea
-                      id="bio"
-                      value={profileData.bio}
-                      onChange={(e) =>
-                        setProfileData((prev) => ({ ...prev, bio: e.target.value }))
-                      }
-                      className="min-h-[100px]"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="github" className="block text-sm font-medium mb-1">
-                      GitHub Profile
-                    </label>
-                    <Input
-                      id="github"
-                      value={profileData.github}
-                      onChange={(e) =>
-                        setProfileData((prev) => ({ ...prev, github: e.target.value }))
-                      }
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="linkedin" className="block text-sm font-medium mb-1">
-                      LinkedIn Profile
-                    </label>
-                    <Input
-                      id="linkedin"
-                      value={profileData.linkedin}
-                      onChange={(e) =>
-                        setProfileData((prev) => ({ ...prev, linkedin: e.target.value }))
-                      }
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="website" className="block text-sm font-medium mb-1">
-                      Website
-                    </label>
-                    <Input
-                      id="website"
-                      value={profileData.website}
-                      onChange={(e) =>
-                        setProfileData((prev) => ({ ...prev, website: e.target.value }))
-                      }
-                    />
-                  </div>
-
-                  <Button type="submit" className="w-full">
-                    Save Changes
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
       </div>
-    </div>
+    </MainLayout>
   );
 };
 
-export default Profile; 
+export default Profile;

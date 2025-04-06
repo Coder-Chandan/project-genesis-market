@@ -12,10 +12,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import { useAuth } from '@/context/AuthContext';
+import { useCart } from '@/context/CartContext';
+import { Badge } from '@/components/ui/badge';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, isAuthenticated, logout, isLoading } = useAuth();
+  const { cartCount } = useCart();
   const navigate = useNavigate();
 
   const toggleMenu = () => {
@@ -65,8 +68,13 @@ const Navbar = () => {
               <Search className="h-5 w-5" />
             </Button>
             
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" onClick={() => navigate('/cart')}>
               <ShoppingCart className="h-5 w-5" />
+              {cartCount > 0 && (
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
+                  {cartCount}
+                </Badge>
+              )}
             </Button>
             
             <ThemeToggle />
@@ -113,6 +121,19 @@ const Navbar = () => {
 
           {/* Mobile menu button */}
           <div className="md:hidden flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => navigate('/cart')}
+              className="relative"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              {cartCount > 0 && (
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
+                  {cartCount}
+                </Badge>
+              )}
+            </Button>
             <ThemeToggle />
             <Button variant="ghost" size="icon" onClick={toggleMenu}>
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -156,7 +177,7 @@ const Navbar = () => {
                   </Link>
                 </>
               )}
-              <Link to="/cart" className="text-foreground">
+              <Link to="/cart" className="text-foreground" onClick={() => setIsMenuOpen(false)}>
                 <ShoppingCart className="h-5 w-5" />
               </Link>
             </div>
