@@ -12,6 +12,7 @@ import { Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MainLayout from "@/components/layout/MainLayout";
+import { Tables } from "@/integrations/supabase/types";
 
 interface PurchasedProject {
   id: string;
@@ -22,14 +23,7 @@ interface PurchasedProject {
   review?: string;
 }
 
-interface Profile {
-  id: string;
-  name: string | null;
-  bio: string | null;
-  github: string | null;
-  linkedin: string | null;
-  website: string | null;
-}
+type Profile = Tables<'profiles'>;
 
 const Profile = () => {
   const { user, logout } = useAuth();
@@ -37,7 +31,7 @@ const Profile = () => {
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [purchasedProjects, setPurchasedProjects] = useState<PurchasedProject[]>([]);
-  const [profileData, setProfileData] = useState<Profile>({
+  const [profileData, setProfileData] = useState<Partial<Profile>>({
     id: "",
     name: user?.user_metadata?.name || "",
     bio: "",
@@ -368,7 +362,7 @@ const Profile = () => {
                       </label>
                       <Input
                         id="name"
-                        value={profileData.name}
+                        value={profileData.name || ''}
                         onChange={(e) =>
                           setProfileData((prev) => ({ ...prev, name: e.target.value }))
                         }
@@ -381,7 +375,7 @@ const Profile = () => {
                       </label>
                       <Textarea
                         id="bio"
-                        value={profileData.bio}
+                        value={profileData.bio || ''}
                         onChange={(e) =>
                           setProfileData((prev) => ({ ...prev, bio: e.target.value }))
                         }
@@ -395,7 +389,7 @@ const Profile = () => {
                       </label>
                       <Input
                         id="github"
-                        value={profileData.github}
+                        value={profileData.github || ''}
                         onChange={(e) =>
                           setProfileData((prev) => ({ ...prev, github: e.target.value }))
                         }
@@ -408,7 +402,7 @@ const Profile = () => {
                       </label>
                       <Input
                         id="linkedin"
-                        value={profileData.linkedin}
+                        value={profileData.linkedin || ''}
                         onChange={(e) =>
                           setProfileData((prev) => ({ ...prev, linkedin: e.target.value }))
                         }
@@ -421,7 +415,7 @@ const Profile = () => {
                       </label>
                       <Input
                         id="website"
-                        value={profileData.website}
+                        value={profileData.website || ''}
                         onChange={(e) =>
                           setProfileData((prev) => ({ ...prev, website: e.target.value }))
                         }
