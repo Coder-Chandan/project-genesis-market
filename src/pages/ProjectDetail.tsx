@@ -3,12 +3,11 @@ import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   ArrowLeft, 
-  ShoppingCart, 
-  Star, 
   Calendar, 
   Check,
   Users,
-  Download
+  Download,
+  Star
 } from 'lucide-react';
 import MainLayout from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -16,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getProjectById, featuredProjects } from '@/data/projectsData';
 import ProjectCard from '@/components/ui/ProjectCard';
+import AddToCart from '@/components/ui/AddToCart';
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -91,10 +91,7 @@ const ProjectDetail = () => {
               </div>
               
               <div className="space-y-3 mb-6">
-                <Button className="w-full bg-brand-600 hover:bg-brand-700">
-                  <ShoppingCart className="h-4 w-4 mr-2" />
-                  Add to Cart
-                </Button>
+                <AddToCart project={project} className="w-full" />
                 <Button variant="outline" className="w-full">
                   <Download className="h-4 w-4 mr-2" />
                   Demo Version

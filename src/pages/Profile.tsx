@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -21,13 +22,23 @@ interface PurchasedProject {
   review?: string;
 }
 
+interface Profile {
+  id: string;
+  name: string | null;
+  bio: string | null;
+  github: string | null;
+  linkedin: string | null;
+  website: string | null;
+}
+
 const Profile = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [purchasedProjects, setPurchasedProjects] = useState<PurchasedProject[]>([]);
-  const [profileData, setProfileData] = useState({
+  const [profileData, setProfileData] = useState<Profile>({
+    id: "",
     name: user?.user_metadata?.name || "",
     bio: "",
     github: "",
@@ -56,6 +67,7 @@ const Profile = () => {
 
       if (data) {
         setProfileData({
+          id: data.id,
           name: data.name || user.user_metadata?.name || "",
           bio: data.bio || "",
           github: data.github || "",
@@ -105,11 +117,10 @@ const Profile = () => {
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // First update Supabase profile table if it exists
       if (user) {
-        const { error: profileError } = await supabase
+        const { error } = await supabase
           .from('profiles')
-          .upsert({ 
+          .upsert({
             id: user.id,
             name: profileData.name,
             bio: profileData.bio,
@@ -119,15 +130,8 @@ const Profile = () => {
             updated_at: new Date()
           });
 
-        if (profileError) throw profileError;
+        if (error) throw error;
       }
-
-      // Then update auth metadata
-      const { error } = await supabase.auth.updateUser({
-        data: { name: profileData.name },
-      });
-
-      if (error) throw error;
 
       toast({
         title: "Profile Updated",
@@ -135,6 +139,7 @@ const Profile = () => {
       });
       setIsEditing(false);
     } catch (error) {
+      console.error("Update error:", error);
       toast({
         title: "Error",
         description: "Failed to update profile. Please try again.",
