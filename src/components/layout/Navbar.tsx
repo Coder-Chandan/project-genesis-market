@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X, ShoppingCart, Search, User, LogOut } from 'lucide-react';
@@ -10,10 +9,19 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@/components/ui/navigation-menu";
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { Badge } from '@/components/ui/badge';
+import { categories } from '@/data/categoriesData';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -33,7 +41,6 @@ const Navbar = () => {
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'Projects', path: '/projects' },
-    { name: 'Categories', path: '/categories' },
     { name: 'About', path: '/about' },
     { name: 'Contact', path: '/contact' },
   ];
@@ -60,18 +67,43 @@ const Navbar = () => {
                 {link.name}
               </Link>
             ))}
+            
+            {/* Categories Dropdown */}
+            <NavigationMenu>
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger>Categories</NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <div className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                      {categories.map((category) => (
+                        <Link
+                          key={category.id}
+                          to={`/categories/${category.id}`}
+                          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                        >
+                          <div className="text-sm font-medium leading-none">{category.name}</div>
+                          <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                            {category.description}
+                          </p>
+                        </Link>
+                      ))}
+                    </div>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
           </div>
 
           {/* Search and Icons */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="flex items-center space-x-4">
             <Button variant="ghost" size="icon">
               <Search className="h-5 w-5" />
             </Button>
             
-            <Button variant="ghost" size="icon" onClick={() => navigate('/cart')}>
+            <Button variant="ghost" size="icon" className="relative" onClick={() => navigate('/cart')}>
               <ShoppingCart className="h-5 w-5" />
               {cartCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-brand-600">
                   {cartCount}
                 </Badge>
               )}
@@ -85,7 +117,7 @@ const Navbar = () => {
                   <User className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent>
                 {isLoading ? (
                   <DropdownMenuItem disabled>
                     Loading...
@@ -120,7 +152,7 @@ const Navbar = () => {
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden flex items-center gap-2">
+          <div className="md:hidden flex items-center space-x-4">
             <Button 
               variant="ghost" 
               size="icon" 
@@ -129,7 +161,7 @@ const Navbar = () => {
             >
               <ShoppingCart className="h-5 w-5" />
               {cartCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-brand-600">
                   {cartCount}
                 </Badge>
               )}
@@ -154,6 +186,24 @@ const Navbar = () => {
                 {link.name}
               </Link>
             ))}
+            
+            {/* Mobile Categories */}
+            <div className="px-4 py-2">
+              <div className="font-medium mb-2">Categories</div>
+              <div className="grid grid-cols-2 gap-2">
+                {categories.map((category) => (
+                  <Link
+                    key={category.id}
+                    to={`/categories/${category.id}`}
+                    className="block py-2 px-3 text-sm text-foreground hover:bg-muted rounded"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {category.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+            
             <div className="flex justify-around pt-4 border-t border-border">
               {isLoading ? (
                 <div className="text-foreground">Loading...</div>

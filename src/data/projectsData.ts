@@ -1,17 +1,18 @@
-
 export interface Project {
   id: string;
   title: string;
+  description: string;
   category: string;
   price: number;
   author: string;
   rating: number;
   sales: number;
-  image: string;
-  description: string;
-  features: string[];
-  isFeatured: boolean;
-  dateAdded: string;
+  image_url?: string;
+  is_featured: boolean;
+  date_added: string;
+  ui_price?: number;
+  code_price?: number;
+  documentation_price?: number;
 }
 
 export const projects: Project[] = [
@@ -23,18 +24,13 @@ export const projects: Project[] = [
     author: "Alex Johnson",
     rating: 4.8,
     sales: 74,
-    image: "https://source.unsplash.com/random/600x400/?ai",
+    image_url: "https://images.unsplash.com/photo-1573164713988-8665fc963095?auto=format&fit=crop&w=600&h=400&q=80",
     description: "A facial recognition system that automates student attendance tracking in educational institutions, complete with admin dashboard, reports, and mobile app integration.",
-    features: [
-      "Facial recognition API",
-      "Real-time attendance tracking",
-      "Admin dashboard",
-      "Report generation",
-      "Mobile app with cross-platform support",
-      "Cloud database integration"
-    ],
-    isFeatured: true,
-    dateAdded: "2023-10-15"
+    is_featured: true,
+    date_added: "2023-10-15",
+    ui_price: 49.99,
+    code_price: 149.99,
+    documentation_price: 29.99
   },
   {
     id: "2",
@@ -44,18 +40,13 @@ export const projects: Project[] = [
     author: "Sarah Williams",
     rating: 4.5,
     sales: 102,
-    image: "https://source.unsplash.com/random/600x400/?inventory",
+    image_url: "https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=600&h=400&q=80",
     description: "A comprehensive inventory management system with barcode scanning, real-time updates, and analytics for small to medium businesses.",
-    features: [
-      "Barcode/QR code integration",
-      "Real-time stock updates",
-      "Supplier management",
-      "Purchase order automation",
-      "Sales analytics dashboard",
-      "Multiple user roles"
-    ],
-    isFeatured: true,
-    dateAdded: "2023-09-22"
+    is_featured: true,
+    date_added: "2023-09-22",
+    ui_price: 39.99,
+    code_price: 99.99,
+    documentation_price: 19.99
   },
   {
     id: "3",
@@ -65,18 +56,13 @@ export const projects: Project[] = [
     author: "Michael Chen",
     rating: 4.9,
     sales: 56,
-    image: "https://source.unsplash.com/random/600x400/?blockchain",
+    image_url: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&w=600&h=400&q=80",
     description: "A secure and transparent voting system built on blockchain technology, ensuring tamper-proof elections and real-time result verification.",
-    features: [
-      "Ethereum smart contracts",
-      "Biometric voter verification",
-      "Real-time vote counting",
-      "Audit trail",
-      "Mobile and web interfaces",
-      "Administrator controls"
-    ],
-    isFeatured: true,
-    dateAdded: "2023-11-05"
+    is_featured: true,
+    date_added: "2023-11-05",
+    ui_price: 59.99,
+    code_price: 199.99,
+    documentation_price: 39.99
   },
   {
     id: "4",
@@ -86,18 +72,13 @@ export const projects: Project[] = [
     author: "Emily Rodriguez",
     rating: 4.7,
     sales: 89,
-    image: "https://source.unsplash.com/random/600x400/?health,iot",
+    image_url: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=600&h=400&q=80",
     description: "An IoT-based health monitoring system that tracks vital signs and alerts caregivers about potential health issues in real-time.",
-    features: [
-      "Multiple health sensors",
-      "Real-time monitoring",
-      "Mobile alerts",
-      "Cloud data storage",
-      "Doctor/caregiver dashboard",
-      "Historical data analysis"
-    ],
-    isFeatured: false,
-    dateAdded: "2023-08-10"
+    is_featured: true,
+    date_added: "2023-08-10",
+    ui_price: 49.99,
+    code_price: 179.99,
+    documentation_price: 29.99
   },
   {
     id: "5",
@@ -107,18 +88,13 @@ export const projects: Project[] = [
     author: "Daniel Park",
     rating: 4.6,
     sales: 122,
-    image: "https://source.unsplash.com/random/600x400/?ecommerce",
+    image_url: "https://images.unsplash.com/photo-1661956602116-aa6865609028?auto=format&fit=crop&w=600&h=400&q=80",
     description: "A fully-featured e-commerce platform with augmented reality capabilities allowing customers to visualize products in their own space before purchasing.",
-    features: [
-      "AR product visualization",
-      "Secure payment gateway",
-      "Inventory management",
-      "Customer reviews system",
-      "Admin dashboard",
-      "Analytics and reporting"
-    ],
-    isFeatured: true,
-    dateAdded: "2023-09-18"
+    is_featured: true,
+    date_added: "2023-09-18",
+    ui_price: 49.99,
+    code_price: 149.99,
+    documentation_price: 29.99
   },
   {
     id: "6",
@@ -128,18 +104,13 @@ export const projects: Project[] = [
     author: "Lisa Nelson",
     rating: 4.4,
     sales: 65,
-    image: "https://source.unsplash.com/random/600x400/?transportation",
+    image_url: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=600&h=400&q=80",
     description: "A data science project that optimizes urban transportation routes and schedules using machine learning algorithms and real-time traffic data.",
-    features: [
-      "Machine learning algorithms",
-      "Traffic pattern analysis",
-      "Route optimization",
-      "Predictive modeling",
-      "Interactive visualizations",
-      "API integration with map services"
-    ],
-    isFeatured: false,
-    dateAdded: "2023-10-28"
+    is_featured: false,
+    date_added: "2023-10-28",
+    ui_price: 39.99,
+    code_price: 99.99,
+    documentation_price: 19.99
   },
   {
     id: "7",
@@ -149,18 +120,13 @@ export const projects: Project[] = [
     author: "Kevin Martinez",
     rating: 4.7,
     sales: 210,
-    image: "https://source.unsplash.com/random/600x400/?language,app",
+    image_url: "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?auto=format&fit=crop&w=600&h=400&q=80",
     description: "A comprehensive language learning application that uses AI to adapt to individual learning styles, featuring speech recognition and gamification elements.",
-    features: [
-      "Speech recognition",
-      "Adaptive learning",
-      "Gamification elements",
-      "Progress tracking",
-      "Offline access",
-      "Multiple language support"
-    ],
-    isFeatured: true,
-    dateAdded: "2023-07-15"
+    is_featured: true,
+    date_added: "2023-07-15",
+    ui_price: 39.99,
+    code_price: 89.99,
+    documentation_price: 19.99
   },
   {
     id: "8",
@@ -170,32 +136,38 @@ export const projects: Project[] = [
     author: "Robert Thompson",
     rating: 4.8,
     sales: 78,
-    image: "https://source.unsplash.com/random/600x400/?maintenance,industrial",
+    image_url: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=600&h=400&q=80",
     description: "An IoT system that predicts equipment failures before they occur, using sensors, machine learning, and real-time analytics to reduce downtime and maintenance costs.",
-    features: [
-      "Sensor integration",
-      "Predictive algorithms",
-      "Real-time monitoring",
-      "Alert system",
-      "Maintenance scheduling",
-      "Analytics dashboard"
-    ],
-    isFeatured: false,
-    dateAdded: "2023-11-12"
+    is_featured: false,
+    date_added: "2023-11-12",
+    ui_price: 59.99,
+    code_price: 199.99,
+    documentation_price: 39.99
   }
 ];
 
-export const featuredProjects = projects.filter(project => project.isFeatured);
+export const getProjects = () => {
+  return Promise.resolve(projects);
+};
 
 export const getProjectById = (id: string) => {
-  return projects.find(project => project.id === id);
+  const project = projects.find(p => p.id === id);
+  return Promise.resolve(project);
 };
 
-export const getProjectsByCategory = (category: string) => {
-  return projects.filter(project => project.category.toLowerCase() === category.toLowerCase());
+export const getFeaturedProjects = (limit = 4) => {
+  const featured = projects.filter(p => p.is_featured).slice(0, limit);
+  return Promise.resolve(featured);
 };
 
+export const getRelatedProjects = (category: string, currentId: string, limit = 4) => {
+  const related = projects
+    .filter(p => p.category === category && p.id !== currentId)
+    .slice(0, limit);
+  return Promise.resolve(related);
+};
 export const getCategories = () => {
   const categories = new Set(projects.map(project => project.category));
   return Array.from(categories);
 };
+
