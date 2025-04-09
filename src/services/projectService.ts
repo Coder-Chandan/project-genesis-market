@@ -47,7 +47,13 @@ export const projectService = {
     return data as Project[];
   },
 
-  createProject: async (project: Partial<Project>) => {
+  createProject: async (project: {
+    title: string;
+    description: string;
+    category: string;
+    price: number;
+    author: string;
+  }) => {
     const { data, error } = await supabase
       .from('projects')
       .insert(project)

@@ -15,14 +15,15 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { projectService } from '@/services/projectService';
+import { Project } from '@/integrations/supabase/custom-types';
 
 const ProjectsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('featured');
   const [showFilters, setShowFilters] = useState(false);
-  const [projects, setProjects] = useState<any[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [categories, setCategories] = useState<string[]>(['all']);
   const [loading, setLoading] = useState<boolean>(true);
   const { toast } = useToast();
   
@@ -35,6 +36,7 @@ const ProjectsPage = () => {
       setLoading(true);
       
       const projectData = await projectService.getProjects();
+      console.log('Fetched projects:', projectData);
       setProjects(projectData || []);
       
       // Extract unique categories
@@ -51,6 +53,33 @@ const ProjectsPage = () => {
       setLoading(false);
     }
   };
+  
+  // If there are no real projects, add some placeholder data
+  useEffect(() => {
+    if (!loading && projects.length === 0) {
+      const placeholderProjects: Project[] = Array(8).fill(null).map((_, index) => ({
+        id: `placeholder-${index}`,
+        title: `Example Project ${index + 1}`,
+        description: "This is an example project description that shows what a project would look like.",
+        category: ["Web Development", "Mobile App", "Data Science", "Machine Learning"][index % 4],
+        price: 79 + (index * 10),
+        author: "Example Author",
+        rating: 4 + (index % 2),
+        sales: 10 + (index * 5),
+        image_url: `https://images.unsplash.com/photo-${1550000000 + index}?w=600&h=400&fit=crop&auto=format`,
+        code_price: null,
+        created_at: null,
+        date_added: null,
+        documentation_price: null,
+        is_featured: index < 2,
+        ui_price: null,
+        updated_at: null
+      }));
+      
+      setProjects(placeholderProjects);
+      setCategories(['all', 'Web Development', 'Mobile App', 'Data Science', 'Machine Learning']);
+    }
+  }, [loading, projects]);
   
   // Filter projects based on search term and category
   const filteredProjects = projects.filter(project => {
@@ -69,13 +98,13 @@ const ProjectsPage = () => {
       case 'price-high':
         return b.price - a.price;
       case 'newest':
-        return new Date(b.date_added).getTime() - new Date(a.date_added).getTime();
+        return new Date(b.date_added || '').getTime() - new Date(a.date_added || '').getTime();
       case 'bestselling':
-        return b.sales - a.sales;
+        return (b.sales || 0) - (a.sales || 0);
       case 'highest-rated':
-        return b.rating - a.rating;
+        return (b.rating || 0) - (a.rating || 0);
       default: // 'featured'
-        return b.is_featured ? 1 : -1;
+        return (b.is_featured ? 1 : 0) - (a.is_featured ? 1 : 0);
     }
   });
 
