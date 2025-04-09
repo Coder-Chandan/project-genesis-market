@@ -1,17 +1,148 @@
-
-import React from 'react';
-import { Search } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import useEmblaCarousel from 'embla-carousel-react';
 
 const HeroSection = () => {
+  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+    loop: true,
+    align: 'center',
+    skipSnaps: false,
+    dragFree: false
+  });
+  const [prevBtnEnabled, setPrevBtnEnabled] = useState(false);
+  const [nextBtnEnabled, setNextBtnEnabled] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const backgroundImages = [
+    {
+      url: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=2070&q=80",
+      title: "Innovative Projects"
+    },
+    {
+      url: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=2070&q=80",
+      title: "Student Collaboration"
+    },
+    {
+      url: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=2070&q=80",
+      title: "Technology Innovation"
+    },
+    {
+      url: "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=2070&q=80",
+      title: "Project Marketplace"
+    }
+  ];
+
+  const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
+  const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
+
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setPrevBtnEnabled(emblaApi.canScrollPrev());
+    setNextBtnEnabled(emblaApi.canScrollNext());
+    setSelectedIndex(emblaApi.selectedScrollSnap());
+  }, [emblaApi]);
+
+  // Add autoplay functionality
+  useEffect(() => {
+    if (!emblaApi) return;
+    
+    let autoplayInterval: NodeJS.Timeout;
+    
+    const startAutoplay = () => {
+      autoplayInterval = setInterval(() => {
+        if (emblaApi.canScrollNext()) {
+          emblaApi.scrollNext();
+        } else {
+          emblaApi.scrollTo(0);
+        }
+      }, 5000); // Change slide every 5 seconds
+    };
+    
+    const stopAutoplay = () => {
+      clearInterval(autoplayInterval);
+    };
+    
+    startAutoplay();
+    
+    // Stop autoplay when user interacts with the carousel
+    emblaApi.on('pointerDown', stopAutoplay);
+    emblaApi.on('select', onSelect);
+    emblaApi.on('reInit', onSelect);
+    
+    return () => {
+      stopAutoplay();
+      emblaApi.off('pointerDown', stopAutoplay);
+      emblaApi.off('select', onSelect);
+      emblaApi.off('reInit', onSelect);
+    };
+  }, [emblaApi, onSelect]);
+
   return (
-    <div className="relative overflow-hidden bg-gradient-to-br from-brand-600 to-accent1-600 py-16 md:py-24">
-      <div className="absolute top-0 left-0 w-full h-full">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" className="absolute top-0 left-0 w-full h-full opacity-10">
-          <path fill="#ffffff" fillOpacity="1" d="M0,256L48,229.3C96,203,192,149,288,133.3C384,117,480,139,576,165.3C672,192,768,224,864,208C960,192,1056,128,1152,101.3C1248,75,1344,85,1392,90.7L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
-        </svg>
+    <div className="relative overflow-hidden bg-gradient-to-br from-brand-600/90 to-accent1-600/90 py-16 md:py-24">
+      {/* Carousel Background */}
+      <div className="absolute inset-0 z-0">
+        <div className="overflow-hidden h-full" ref={emblaRef}>
+          <div className="flex h-full">
+            {backgroundImages.map((image, index) => (
+              <div 
+                key={index} 
+                className="flex-[0_0_100%] min-w-0 relative h-full"
+              >
+                <div 
+                  className="absolute inset-0 w-full h-full"
+                  style={{
+                    backgroundImage: `url("${image.url}")`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat',
+                    opacity: 0.4,
+                    width: '100vw'
+                  }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-black/30"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        {/* Carousel Navigation */}
+        <div className="absolute bottom-4 left-0 right-0 flex justify-center items-center space-x-2 z-10">
+          {backgroundImages.map((_, index) => (
+            <button
+              key={index}
+              className={`w-2 h-2 rounded-full transition-all ${
+                index === selectedIndex ? 'bg-white w-4' : 'bg-white/50'
+              }`}
+              onClick={() => emblaApi && emblaApi.scrollTo(index)}
+            />
+          ))}
+        </div>
+        
+        {/* Carousel Arrows */}
+        <div className="absolute top-1/2 left-0 right-0 flex justify-between px-4 z-10">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="rounded-full bg-black/30 hover:bg-black/50 text-white"
+            onClick={scrollPrev}
+            disabled={!prevBtnEnabled}
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="rounded-full bg-black/30 hover:bg-black/50 text-white"
+            onClick={scrollNext}
+            disabled={!nextBtnEnabled}
+          >
+            <ChevronRight className="h-6 w-6" />
+          </Button>
+        </div>
       </div>
+      
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
@@ -32,26 +163,7 @@ const HeroSection = () => {
               Search
             </Button>
           </div>
-          
-          <div className="mt-6 flex flex-wrap justify-center gap-2 text-white/80 text-sm">
-            <span>Popular:</span>
-            {['Web Development', 'AI & ML', 'Mobile Apps', 'IoT', 'Blockchain'].map((tag) => (
-              <a 
-                key={tag} 
-                href={`/categories/${tag.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-')}`}
-                className="underline underline-offset-2 hover:text-white"
-              >
-                {tag}
-              </a>
-            ))}
-          </div>
         </div>
-      </div>
-
-      <div className="absolute bottom-0 w-full">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" className="w-full h-auto">
-          <path fill="#f8fafc" fillOpacity="1" d="M0,224L80,213.3C160,203,320,181,480,186.7C640,192,800,224,960,218.7C1120,213,1280,171,1360,149.3L1440,128L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"></path>
-        </svg>
       </div>
     </div>
   );

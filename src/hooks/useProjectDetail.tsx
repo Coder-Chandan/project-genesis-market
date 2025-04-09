@@ -1,14 +1,14 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
+import { projectService } from '@/services/projectService';
+import { Project } from '@/data/projectsData';
 
 export const useProjectDetail = (id: string | undefined) => {
-  const [project, setProject] = useState<any>(null);
-  const [relatedProjects, setRelatedProjects] = useState<any[]>([]);
+  const [project, setProject] = useState<Project | null>(null);
+  const [relatedProjects, setRelatedProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedOptions, setSelectedOptions] = useState<{
     ui: boolean;
@@ -42,27 +42,23 @@ export const useProjectDetail = (id: string | undefined) => {
       setLoading(true);
       
       // Fetch project details
-      const { data: projectData, error: projectError } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('id', id)
-        .single();
-        
-      if (projectError) throw projectError;
+      const projectData = await projectService.getProjectById(id!);
+      
+      if (!projectData) {
+        setProject(null);
+        return;
+      }
       
       setProject(projectData);
       
       // Fetch related projects
-      const { data: relatedData, error: relatedError } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('category', projectData.category)
-        .neq('id', id)
-        .limit(4);
-        
-      if (relatedError) throw relatedError;
+      const relatedData = await projectService.getRelatedProjects(
+        projectData.category,
+        projectData.id,
+        4
+      );
       
-      setRelatedProjects(relatedData || []);
+      setRelatedProjects(relatedData);
     } catch (error: any) {
       console.error('Error fetching project:', error);
       toast({
@@ -70,6 +66,7 @@ export const useProjectDetail = (id: string | undefined) => {
         description: error.message || "Failed to load project details",
         variant: "destructive",
       });
+      setProject(null);
     } finally {
       setLoading(false);
     }
@@ -81,20 +78,20 @@ export const useProjectDetail = (id: string | undefined) => {
     let price = 0;
     
     if (selectedOptions.ui && project.ui_price) {
-      price += parseFloat(project.ui_price);
+      price += project.ui_price;
     }
     
     if (selectedOptions.code && project.code_price) {
-      price += parseFloat(project.code_price);
+      price += project.code_price;
     }
     
     if (selectedOptions.documentation && project.documentation_price) {
-      price += parseFloat(project.documentation_price);
+      price += project.documentation_price;
     }
     
     // If nothing selected, use base price
     if (price === 0 && !selectedOptions.ui && !selectedOptions.code && !selectedOptions.documentation) {
-      price = parseFloat(project.price);
+      price = project.price;
     }
     
     setTotalPrice(price);
@@ -122,7 +119,7 @@ export const useProjectDetail = (id: string | undefined) => {
     }
     
     const selectedProductOptions = [];
-    let itemTitle = project.title;
+    let itemTitle = project!.title;
     
     if (selectedOptions.ui) {
       selectedProductOptions.push('UI');
@@ -141,10 +138,10 @@ export const useProjectDetail = (id: string | undefined) => {
     }
     
     addToCart({
-      id: `${project.id}-${selectedProductOptions.join('-')}`,
+      id: `${project!.id}-${selectedProductOptions.join('-')}`,
       title: itemTitle,
       price: totalPrice,
-      image: project.image_url || 'https://source.unsplash.com/random/600x400/?tech'
+      image: project!.image_url || 'https://source.unsplash.com/random/600x400/?tech'
     });
     
     toast({

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -52,7 +51,7 @@ const FeaturedProjects = () => {
     : placeholderProjects;
 
   return (
-    <section className="py-16">
+    <section className="py-8 bg-white">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-2xl md:text-3xl font-bold">Featured Projects</h2>
