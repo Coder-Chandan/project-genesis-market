@@ -117,7 +117,7 @@ const Profile = () => {
             github: profileData.github,
             linkedin: profileData.linkedin,
             website: profileData.website,
-            updated_at: new Date()
+            updated_at: new Date().toISOString() // Fix: Convert Date to string using toISOString()
           });
 
         if (error) throw error;
@@ -205,7 +205,7 @@ const Profile = () => {
               <ProfileOverview 
                 profileData={profileData}
                 purchasesCount={purchasedProjects.length}
-                userEmail={user.email}
+                userEmail={user?.email}
                 averageRating={averageRating}
               />
             </TabsContent>

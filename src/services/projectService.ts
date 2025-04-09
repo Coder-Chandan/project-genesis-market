@@ -47,7 +47,7 @@ export const projectService = {
     return data as Project[];
   },
 
-  createProject: async (project: Omit<Project, 'id'>) => {
+  createProject: async (project: Partial<Project>) => {
     const { data, error } = await supabase
       .from('projects')
       .insert(project)
@@ -152,21 +152,10 @@ export const projectService = {
   },
 
   addAdmin: async (email: string) => {
-    // Get user by email
-    const { data: userData, error: userError } = await supabase
-      .from('auth.users')
-      .select('id')
-      .eq('email', email)
-      .single();
-      
-    if (userError) throw userError;
-    
-    // Add to admin_users
-    const { error } = await supabase
-      .from('admin_users')
-      .insert({ id: userData.id });
-      
-    if (error) throw error;
-    return true;
+    // Since we can't directly query auth.users table through the JS client,
+    // we would need to implement this through a Supabase function or API endpoint
+    // For now, we'll just return a placeholder
+    console.warn('Admin functionality requires a server-side implementation');
+    return false;
   },
 };
