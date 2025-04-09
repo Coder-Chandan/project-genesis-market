@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
   Calendar, 
@@ -18,6 +18,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import ProjectCard from '@/components/ui/ProjectCard';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
+import { useCart } from '@/context/CartContext';
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -35,6 +38,9 @@ const ProjectDetail = () => {
   });
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
 
   useEffect(() => {
     if (id) {
@@ -119,7 +125,45 @@ const ProjectDetail = () => {
   };
 
   const handleAddToCart = () => {
-    // Placeholder for cart functionality
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to add items to your cart",
+        variant: "destructive",
+      });
+      
+      // Store the current URL in session storage to redirect back after login
+      sessionStorage.setItem('redirectAfterLogin', window.location.pathname);
+      navigate('/login');
+      return;
+    }
+    
+    const selectedProductOptions = [];
+    let itemTitle = project.title;
+    
+    if (selectedOptions.ui) {
+      selectedProductOptions.push('UI');
+    }
+    
+    if (selectedOptions.code) {
+      selectedProductOptions.push('Code');
+    }
+    
+    if (selectedOptions.documentation) {
+      selectedProductOptions.push('Documentation');
+    }
+    
+    if (selectedProductOptions.length > 0) {
+      itemTitle += ` (${selectedProductOptions.join(', ')})`;
+    }
+    
+    addToCart({
+      id: `${project.id}-${selectedProductOptions.join('-')}`,
+      title: itemTitle,
+      price: totalPrice,
+      image: project.image_url || 'https://source.unsplash.com/random/600x400/?tech'
+    });
+    
     toast({
       title: "Added to Cart",
       description: "Selected project options have been added to your cart.",

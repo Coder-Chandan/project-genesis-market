@@ -13,8 +13,8 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { projectService } from '@/services/projectService';
 
 const ProjectsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -34,16 +34,11 @@ const ProjectsPage = () => {
     try {
       setLoading(true);
       
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*');
-        
-      if (error) throw error;
-      
-      setProjects(data || []);
+      const projectData = await projectService.getProjects();
+      setProjects(projectData || []);
       
       // Extract unique categories
-      const uniqueCategories = Array.from(new Set(data?.map(project => project.category) || []));
+      const uniqueCategories = Array.from(new Set(projectData.map(project => project.category) || []));
       setCategories(['all', ...uniqueCategories]);
     } catch (error: any) {
       console.error('Error fetching projects:', error);

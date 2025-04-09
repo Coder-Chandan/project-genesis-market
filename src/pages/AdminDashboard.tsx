@@ -5,11 +5,11 @@ import { useToast } from '@/hooks/use-toast';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import MainLayout from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import AdminProjectForm from '@/components/admin/AdminProjectForm';
 import AdminProjectList from '@/components/admin/AdminProjectList';
 import { supabase } from '@/integrations/supabase/client';
+import { projectService } from '@/services/projectService';
 
 const AdminDashboard = () => {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
@@ -33,27 +33,30 @@ const AdminDashboard = () => {
         return;
       }
 
-      const { data, error } = await supabase.rpc('is_admin');
+      // Check if user is admin or has the specific admin email
+      const isAdminUser = user.email === 'chandan143css@gmail.com' || await projectService.isAdmin();
       
-      if (error) {
-        console.error('Error checking admin status:', error);
+      setIsAdmin(isAdminUser);
+      if (!isAdminUser) {
         navigate('/');
         toast({
           title: "Access Denied",
           description: "You don't have permission to access this page.",
           variant: "destructive"
         });
-        return;
-      }
-
-      setIsAdmin(data);
-      if (!data) {
-        navigate('/');
-        toast({
-          title: "Access Denied",
-          description: "You don't have permission to access this page.",
-          variant: "destructive"
-        });
+      } else {
+        // If user has admin email but is not in admin_users table, add them
+        if (user.email === 'chandan143css@gmail.com') {
+          const { data: adminCheck } = await supabase
+            .from('admin_users')
+            .select('*')
+            .eq('id', user.id)
+            .maybeSingle();
+            
+          if (!adminCheck) {
+            await supabase.from('admin_users').insert({ id: user.id });
+          }
+        }
       }
     } catch (error) {
       console.error('Error checking admin status:', error);

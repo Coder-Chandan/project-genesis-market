@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ProjectCard from '@/components/ui/ProjectCard';
-import { supabase } from '@/integrations/supabase/client';
+import { projectService } from '@/services/projectService';
 
 const FeaturedProjects = () => {
   const [featuredProjects, setFeaturedProjects] = useState<any[]>([]);
@@ -16,16 +16,8 @@ const FeaturedProjects = () => {
   const fetchFeaturedProjects = async () => {
     try {
       setLoading(true);
-      
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('is_featured', true)
-        .limit(4);
-        
-      if (error) throw error;
-      
-      setFeaturedProjects(data || []);
+      const projects = await projectService.getFeaturedProjects(4);
+      setFeaturedProjects(projects);
     } catch (error) {
       console.error('Error fetching featured projects:', error);
     } finally {

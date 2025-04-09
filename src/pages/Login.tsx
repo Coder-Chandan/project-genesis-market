@@ -42,7 +42,9 @@ const Login = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
-      navigate('/');
+      const redirectUrl = sessionStorage.getItem('redirectAfterLogin') || '/';
+      sessionStorage.removeItem('redirectAfterLogin');
+      navigate(redirectUrl);
     }
   }, [isAuthenticated, isLoading, navigate]);
 
@@ -52,7 +54,9 @@ const Login = () => {
     try {
       const { error } = await login(data.email, data.password);
       if (!error) {
-        navigate('/');
+        const redirectUrl = sessionStorage.getItem('redirectAfterLogin') || '/';
+        sessionStorage.removeItem('redirectAfterLogin');
+        navigate(redirectUrl);
       }
     } catch (error) {
       console.error(error);
