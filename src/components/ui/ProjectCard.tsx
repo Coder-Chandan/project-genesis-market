@@ -2,12 +2,21 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Star, Users } from 'lucide-react';
-import { Project } from '@/data/projectsData';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 
 interface ProjectCardProps {
-  project: Project;
+  project: {
+    id: string;
+    title: string;
+    description: string;
+    category: string;
+    price: number;
+    author: string;
+    rating: number;
+    sales: number;
+    image_url?: string;
+  };
 }
 
 const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
@@ -16,7 +25,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
       <Card className="overflow-hidden card-hover h-full flex flex-col">
         <div className="aspect-video w-full overflow-hidden">
           <img 
-            src={project.image} 
+            src={project.image_url || 'https://source.unsplash.com/random/600x400/?tech'} 
             alt={project.title} 
             className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
           />

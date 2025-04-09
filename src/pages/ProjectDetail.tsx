@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   ArrowLeft, 
@@ -7,25 +7,137 @@ import {
   Check,
   Users,
   Download,
-  Star
+  Star,
+  ShoppingCart
 } from 'lucide-react';
 import MainLayout from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getProjectById, featuredProjects } from '@/data/projectsData';
+import { supabase } from '@/integrations/supabase/client';
 import ProjectCard from '@/components/ui/ProjectCard';
-import AddToCart from '@/components/ui/AddToCart';
+import { useToast } from '@/hooks/use-toast';
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const project = getProjectById(id || '');
-  
-  // Show related projects (exclude current project)
-  const relatedProjects = featuredProjects
-    .filter(p => p.id !== id)
-    .slice(0, 4);
-  
+  const [project, setProject] = useState<any>(null);
+  const [relatedProjects, setRelatedProjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [selectedOptions, setSelectedOptions] = useState<{
+    ui: boolean;
+    code: boolean;
+    documentation: boolean;
+  }>({
+    ui: false,
+    code: false,
+    documentation: false
+  });
+  const [totalPrice, setTotalPrice] = useState<number>(0);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (id) {
+      fetchProject();
+    }
+  }, [id]);
+
+  useEffect(() => {
+    if (project) {
+      calculateTotalPrice();
+    }
+  }, [selectedOptions, project]);
+
+  const fetchProject = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch project details
+      const { data: projectData, error: projectError } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', id)
+        .single();
+        
+      if (projectError) throw projectError;
+      
+      setProject(projectData);
+      
+      // Fetch related projects
+      const { data: relatedData, error: relatedError } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('category', projectData.category)
+        .neq('id', id)
+        .limit(4);
+        
+      if (relatedError) throw relatedError;
+      
+      setRelatedProjects(relatedData || []);
+    } catch (error: any) {
+      console.error('Error fetching project:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to load project details",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const calculateTotalPrice = () => {
+    if (!project) return;
+    
+    let price = 0;
+    
+    if (selectedOptions.ui && project.ui_price) {
+      price += parseFloat(project.ui_price);
+    }
+    
+    if (selectedOptions.code && project.code_price) {
+      price += parseFloat(project.code_price);
+    }
+    
+    if (selectedOptions.documentation && project.documentation_price) {
+      price += parseFloat(project.documentation_price);
+    }
+    
+    // If nothing selected, use base price
+    if (price === 0 && !selectedOptions.ui && !selectedOptions.code && !selectedOptions.documentation) {
+      price = parseFloat(project.price);
+    }
+    
+    setTotalPrice(price);
+  };
+
+  const handleOptionChange = (option: 'ui' | 'code' | 'documentation') => {
+    setSelectedOptions(prev => ({
+      ...prev,
+      [option]: !prev[option]
+    }));
+  };
+
+  const handleAddToCart = () => {
+    // Placeholder for cart functionality
+    toast({
+      title: "Added to Cart",
+      description: "Selected project options have been added to your cart.",
+    });
+  };
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex justify-center items-center h-64">
+            <p>Loading project details...</p>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
   if (!project) {
     return (
       <MainLayout>
@@ -58,7 +170,7 @@ const ProjectDetail = () => {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg overflow-hidden shadow-sm">
               <img 
-                src={project.image} 
+                src={project.image_url || 'https://source.unsplash.com/random/800x600/?tech'} 
                 alt={project.title} 
                 className="w-full object-cover aspect-video"
               />
@@ -74,24 +186,89 @@ const ProjectDetail = () => {
               <div className="flex items-center mb-4 text-sm">
                 <div className="flex items-center text-amber-500 mr-4">
                   <Star className="h-4 w-4 fill-amber-500 mr-1" />
-                  <span>{project.rating}</span>
+                  <span>{project.rating || 0}</span>
                 </div>
                 <div className="flex items-center text-gray-500 mr-4">
                   <Users className="h-4 w-4 mr-1" />
-                  <span>{project.sales} sales</span>
+                  <span>{project.sales || 0} sales</span>
                 </div>
                 <div className="flex items-center text-gray-500">
                   <Calendar className="h-4 w-4 mr-1" />
-                  <span>Added {new Date(project.dateAdded).toLocaleDateString()}</span>
+                  <span>Added {new Date(project.date_added).toLocaleDateString()}</span>
                 </div>
               </div>
               
               <div className="mb-6">
-                <p className="text-3xl font-bold text-brand-600">${project.price}</p>
+                <p className="text-3xl font-bold text-brand-600">${totalPrice.toFixed(2)}</p>
+              </div>
+              
+              {/* Purchase Options */}
+              <div className="space-y-3 mb-4 bg-gray-50 p-4 rounded-md">
+                <h3 className="font-semibold mb-2">Purchase Options</h3>
+                
+                {project.ui_price && (
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="ui-option"
+                      checked={selectedOptions.ui}
+                      onCheckedChange={() => handleOptionChange('ui')}
+                    />
+                    <div className="flex justify-between items-center w-full">
+                      <label
+                        htmlFor="ui-option"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        UI Only
+                      </label>
+                      <span className="text-sm font-medium">${project.ui_price}</span>
+                    </div>
+                  </div>
+                )}
+                
+                {project.code_price && (
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="code-option"
+                      checked={selectedOptions.code}
+                      onCheckedChange={() => handleOptionChange('code')}
+                    />
+                    <div className="flex justify-between items-center w-full">
+                      <label
+                        htmlFor="code-option"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        Code
+                      </label>
+                      <span className="text-sm font-medium">${project.code_price}</span>
+                    </div>
+                  </div>
+                )}
+                
+                {project.documentation_price && (
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="documentation-option"
+                      checked={selectedOptions.documentation}
+                      onCheckedChange={() => handleOptionChange('documentation')}
+                    />
+                    <div className="flex justify-between items-center w-full">
+                      <label
+                        htmlFor="documentation-option"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        Documentation
+                      </label>
+                      <span className="text-sm font-medium">${project.documentation_price}</span>
+                    </div>
+                  </div>
+                )}
               </div>
               
               <div className="space-y-3 mb-6">
-                <AddToCart project={project} className="w-full" />
+                <Button className="w-full" onClick={handleAddToCart}>
+                  <ShoppingCart className="h-4 w-4 mr-2" />
+                  Add to Cart
+                </Button>
                 <Button variant="outline" className="w-full">
                   <Download className="h-4 w-4 mr-2" />
                   Demo Version
@@ -134,7 +311,14 @@ const ProjectDetail = () => {
             <TabsContent value="features" className="bg-white p-6 rounded-b-lg shadow-sm">
               <h2 className="text-xl font-semibold mb-4">Key Features</h2>
               <ul className="space-y-2">
-                {project.features.map((feature, index) => (
+                {[
+                  "Complete source code with comments",
+                  "Responsive user interface",
+                  "Well-structured documentation",
+                  "Installation guide",
+                  "API documentation",
+                  "Database schema"
+                ].map((feature, index) => (
                   <li key={index} className="flex items-start">
                     <Check className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
                     <span>{feature}</span>
@@ -170,14 +354,16 @@ const ProjectDetail = () => {
         </div>
         
         {/* Related Projects */}
-        <div className="mt-16">
-          <h2 className="text-2xl font-bold mb-6">Related Projects</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {relatedProjects.map((project) => (
-              <ProjectCard key={project.id} project={project} />
-            ))}
+        {relatedProjects.length > 0 && (
+          <div className="mt-16">
+            <h2 className="text-2xl font-bold mb-6">Related Projects</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {relatedProjects.map((relatedProject) => (
+                <ProjectCard key={relatedProject.id} project={relatedProject} />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </MainLayout>
   );

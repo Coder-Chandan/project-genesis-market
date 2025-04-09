@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Sliders } from 'lucide-react';
 import MainLayout from '@/components/layout/MainLayout';
@@ -13,15 +13,49 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import { projects, getCategories } from '@/data/projectsData';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const ProjectsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [sortBy, setSortBy] = useState('featured');
   const [showFilters, setShowFilters] = useState(false);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const { toast } = useToast();
   
-  const categories = ['all', ...getCategories()];
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  const fetchProjects = async () => {
+    try {
+      setLoading(true);
+      
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*');
+        
+      if (error) throw error;
+      
+      setProjects(data || []);
+      
+      // Extract unique categories
+      const uniqueCategories = Array.from(new Set(data?.map(project => project.category) || []));
+      setCategories(['all', ...uniqueCategories]);
+    } catch (error: any) {
+      console.error('Error fetching projects:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to load projects",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
   
   // Filter projects based on search term and category
   const filteredProjects = projects.filter(project => {
@@ -40,13 +74,13 @@ const ProjectsPage = () => {
       case 'price-high':
         return b.price - a.price;
       case 'newest':
-        return new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime();
+        return new Date(b.date_added).getTime() - new Date(a.date_added).getTime();
       case 'bestselling':
         return b.sales - a.sales;
       case 'highest-rated':
         return b.rating - a.rating;
       default: // 'featured'
-        return b.isFeatured ? 1 : -1;
+        return b.is_featured ? 1 : -1;
     }
   });
 
@@ -122,7 +156,11 @@ const ProjectsPage = () => {
             </p>
           </div>
           
-          {sortedProjects.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-12">
+              <p className="text-lg">Loading projects...</p>
+            </div>
+          ) : sortedProjects.length === 0 ? (
             <div className="text-center py-12">
               <h3 className="text-lg font-medium text-gray-900 mb-2">No projects found</h3>
               <p className="text-gray-600 mb-4">Try changing your search or filter criteria</p>
