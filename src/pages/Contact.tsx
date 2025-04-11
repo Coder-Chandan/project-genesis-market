@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -98,50 +99,37 @@ const Contact = () => {
             </CardContent>
           </Card>
 
-          <div className="space-y-6">
-            <Card>
-              <CardContent className="pt-6">
-                <h2 className="text-2xl font-semibold mb-4">Contact Information</h2>
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="font-medium">Email</h3>
-                    <p className="text-gray-600 dark:text-gray-300">
-                      support@projectgenesis.com
-                    </p>
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Address</h3>
-                    <p className="text-gray-600 dark:text-gray-300">
-                      123 Innovation Street<br />
-                      Tech City, TC 12345
-                    </p>
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Business Hours</h3>
-                    <p className="text-gray-600 dark:text-gray-300">
-                      Monday - Friday: 9:00 AM - 6:00 PM<br />
-                      Saturday - Sunday: Closed
-                    </p>
-                  </div>
+          <Card>
+            <CardContent className="pt-6">
+              <h2 className="text-2xl font-semibold mb-4">Contact Information</h2>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-medium">Email</h3>
+                  <p className="text-gray-600 dark:text-gray-300">
+                    support@projectgenesis.com
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <h2 className="text-2xl font-semibold mb-4">Follow Us</h2>
-                <div className="flex space-x-4">
-                  <Button variant="outline">Twitter</Button>
-                  <Button variant="outline">LinkedIn</Button>
-                  <Button variant="outline">GitHub</Button>
+                <div>
+                  <h3 className="font-medium">Address</h3>
+                  <p className="text-gray-600 dark:text-gray-300">
+                    123 Innovation Street<br />
+                    Tech City, TC 12345
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+                <div>
+                  <h3 className="font-medium">Business Hours</h3>
+                  <p className="text-gray-600 dark:text-gray-300">
+                    Monday - Friday: 9:00 AM - 6:00 PM<br />
+                    Saturday - Sunday: Closed
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
   );
 };
 
-export default Contact; 
+export default Contact;
